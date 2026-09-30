@@ -1,0 +1,8 @@
+---
+description: Backend agent rules live in backend/AGENTS.md
+alwaysApply: true
+---
+
+Backend agent rules are in this directory's `AGENTS.md`. Follow it.
+
+@AGENTS.md

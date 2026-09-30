@@ -1,0 +1,8 @@
+---
+description: Frontend agent rules live in frontend/AGENTS.md
+alwaysApply: true
+---
+
+Frontend agent rules are in this directory's `AGENTS.md`. Follow it.
+
+@AGENTS.md

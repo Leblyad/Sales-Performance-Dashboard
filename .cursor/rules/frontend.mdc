@@ -1,0 +1,9 @@
+---
+description: Frontend agent rules when editing frontend/
+globs: frontend/**
+alwaysApply: false
+---
+
+For frontend files, follow `frontend/AGENTS.md`.
+
+@frontend/AGENTS.md

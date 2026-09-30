@@ -1,0 +1,8 @@
+---
+description: Prompt-agent rules live in the root AGENTS.md
+alwaysApply: true
+---
+
+This chat's rules, the request journal, and the three-agent boundaries are in the root `AGENTS.md`. Follow it.
+
+@AGENTS.md
