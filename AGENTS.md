@@ -12,7 +12,7 @@ AI-native fullstack developer for this Sales Performance Dashboard assignment. H
 
 Short stack, without repeating the rules:
 
-- Backend: one ASP.NET Core project, EF Core, PostgreSQL, NLog, FluentValidation, Mapster. Detail is in `backend/AGENTS.md` and `backend/AGENTS/coding-rules.md`. The `Item` sample shows file shape, not the sales domain.
+- Backend: one ASP.NET Core project, EF Core, PostgreSQL, NLog, FluentValidation, Mapster. Detail is in `backend/AGENTS.md` and `backend/AGENTS/coding-rules.md`.
 - Frontend: React 19, TypeScript, Vite, and the libraries in `frontend/react-client.md`. One browser page at about 1440×900. The server computes KPI. Detail is in `frontend/AGENTS.md`.
 - Out of scope: auth, mobile, admin, Kubernetes, microservices, outbox, repositories.
 

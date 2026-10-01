@@ -115,7 +115,7 @@ Don't claim it works unless you checked.
 
 For this project the check is `dotnet build SalesDashboard.slnx` from `backend/`. There is no test project and no compose file; do not invent a runner for them.
 
-`GET /health` counts only when the app is already running. A successful build does not mean PostgreSQL or `POST /api/items` works.
+`GET /health` counts only when the app is already running. A successful build does not mean PostgreSQL is available.
 
 Do not add tests unless the user explicitly requests them, **or** the change touches calculation / schema formulas that the project requires tests for, **or** the task cannot be completed without updating tests.
 
@@ -134,13 +134,12 @@ Avoid: large diffs unless requested; private reasoning; unnecessary ceremony; ge
 - **Style hierarchy:** Match the current file first, then the same folder in `SalesDashboard.Api`.
 - **Preserve existing logic:** Do not alter business flows unless required by the task.
 - **Extend, don't fork:** Adapt the existing implementation instead of adding a parallel path.
-- **Constants:** Match the identifier style of the current file (`ErrorCode`). Error-code string values stay `UPPER_SNAKE` (`ITEM_NOT_FOUND`).
+- **Constants:** Match the identifier style of the current file (`ErrorCode`). Error-code string values stay `UPPER_SNAKE` (`EXTERNAL_SERVICE_ERROR`).
 - **Method size:** Split large methods; extract helpers when logic is reused or hard to read.
 - **No trivial wrappers:** Do not wrap a few lines just for structure.
-- **Business exceptions:** Throw a subclass of `AppException` with `Code` and `StatusCode`. Sample: `Exceptions/ItemNotFoundException.cs`. `AppExceptionHandler` maps it to ProblemDetails. Do not use bare `Exception` / `KeyNotFoundException` / `InvalidOperationException` for expected business failures.
+- **Business exceptions:** Throw a subclass of `AppException` with `Code` and `StatusCode`. Sample: `Exceptions/AppException.cs`. `AppExceptionHandler` maps it to ProblemDetails. Do not use bare `Exception` / `KeyNotFoundException` / `InvalidOperationException` for expected business failures.
 - **No new comments by default:** including XML docs — unless the current file already uses the same kind nearby.
 - **DI:** Register next to the existing `Add*` calls in `Program.cs`. Do not add a per-layer `Extensions/` folder.
-- **Idempotency:** The Item create path returns the existing row for the same `ExternalId`. Do not add that pattern to other writes unless the task asks for it.
 - **Minimal deletion:** Delete only what your changes made unused or what breaks the new behavior.
 
 ## 8. Code generation order
@@ -160,4 +159,4 @@ Before writing code:
 - Do not force-push or amend unless the user explicitly requests it.
 - To show the scope, follow `.cursor/skills/commit-scope/SKILL.md` at the repository root: `git diff` and a one-line message. That skill does not commit.
 
-Do not restore outbox, HttpClient, repositories, or separate assemblies. `Item` is a file-shape sample, not the sales domain.
+Do not restore outbox, HttpClient, repositories, or separate assemblies.

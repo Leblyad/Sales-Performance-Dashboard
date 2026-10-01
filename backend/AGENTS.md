@@ -10,18 +10,14 @@ One prompt is one decision. Finish by showing the diff with `../.cursor/skills/c
 
 ## Project
 
-One project, `SalesDashboard.Api`. `Item` is a file-shape sample, not the sales domain.
+One project, `SalesDashboard.Api`.
 
 ```
 SalesDashboard.Api/
-  Domain/        Item
-  Dto/           CreateItemDto, ItemDto
-  Services/      ItemService
-  Validation/    FluentValidation, CreateItemDto
-  Mapping/       Mapster, Item
-  Exceptions/    AppException, ItemNotFound, ExternalService, AppExceptionHandler
-  Data/          AppDbContext, items table
-  Controllers/   ItemsController
+  Domain/        Team, Position, Manager, Customer, Category, Product, Sale, SaleItem, SaleStatus
+  Data/          AppDbContext, Configurations
+  Exceptions/    AppException, ExternalService, AppExceptionHandler
+  Migrations/
   nlog.config    console, file, Metrics channel
 ```
 

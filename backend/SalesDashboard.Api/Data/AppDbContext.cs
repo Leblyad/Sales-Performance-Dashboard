@@ -5,15 +5,24 @@ namespace SalesDashboard.Data;
 
 public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
-    public DbSet<Item> Items => Set<Item>();
+    public DbSet<Team> Teams => Set<Team>();
+
+    public DbSet<Position> Positions => Set<Position>();
+
+    public DbSet<Manager> Managers => Set<Manager>();
+
+    public DbSet<Customer> Customers => Set<Customer>();
+
+    public DbSet<Category> Categories => Set<Category>();
+
+    public DbSet<Product> Products => Set<Product>();
+
+    public DbSet<Sale> Sales => Set<Sale>();
+
+    public DbSet<SaleItem> SaleItems => Set<SaleItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        var item = modelBuilder.Entity<Item>();
-        item.ToTable("items");
-        item.HasKey(x => x.ExternalId);
-        item.Property(x => x.ExternalId).ValueGeneratedNever();
-        item.Property(x => x.Name).HasMaxLength(256).IsRequired();
-        item.Property(x => x.Description).HasMaxLength(1024);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
     }
 }
