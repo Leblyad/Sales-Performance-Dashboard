@@ -18,6 +18,7 @@ SalesDashboard.Api/
   Data/          AppDbContext, Configurations
   Dto/           PageDto, SortedPageDto, результаты и параметры запросов dashboard
   Mapping/       DashboardRegister
+  Controllers/   DashboardController
   Exceptions/    AppException, ExternalService, AppExceptionHandler
   Migrations/
   nlog.config    console, file, Metrics channel
