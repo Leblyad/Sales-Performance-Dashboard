@@ -5,7 +5,7 @@ namespace SalesDashboard.Data.Queries;
 
 public static class RecentSalesQuery
 {
-    public static Task<List<RecentSale>> GetAsync(AppDbContext db)
+    public static Task<List<RecentSale>> GetAsync(AppDbContext db, int skip, int take)
     {
         return db.Sales
             .OrderByDescending(sale => sale.Date)
@@ -35,6 +35,8 @@ public static class RecentSalesQuery
                 GrossProfit = sale.Items.Sum(item => item.Price * item.Quantity)
                     - sale.Items.Sum(item => item.Cost * item.Quantity),
             })
+            .Skip(skip)
+            .Take(take)
             .ToListAsync();
     }
 }
