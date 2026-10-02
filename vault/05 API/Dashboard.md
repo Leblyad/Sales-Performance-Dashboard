@@ -23,14 +23,14 @@ updated: 2026-10-02
 - `GET /api/dashboard/categories` — `CategoryStatQueryDto`: `DateFrom`, `DateTo` (`DateTime`), `Mode` (`SalesCount` или `Revenue`), `Skip`, `Take`. Ответ `SortedPageDto`: `Items` (`Id`, `Name`, `SalesCount`, `Revenue`), `Skip`, `Take`, `Sort`.
 - `GET /api/dashboard/products` — без параметров. Ответ — список `TopProductDto`: `Id`, `Name`, `Revenue`, пять строк.
 - `GET /api/dashboard/sales` — `RecentSalesQueryDto`: `Skip`, `Take`. Ответ `PageDto`: `Items` (`Date`, менеджер `Id`/`Name`/`Avatar`, клиент `Id`/`Name`, товары `Id`/`Name`, `Status`, `Amount`, `GrossProfit`), `Skip`, `Take`.
-- Включённость границ, время внутри дня и часовой пояс не зафиксированы. Пункт 5 в [[Разбор задания/03 Домен/Открытые решения]] остаётся открытым.
+- from и to включительны, см. [[03 Домен/Границы периода]]. Сравнение по дате или по времени и часовой пояс не заданы.
 - Пустая дата и конец диапазона раньше начала — 400, тело `ValidationProblemDetails`. Знак `Skip` и `Take` не проверяется. У рейтинга, продуктов и последних продаж валидатора дат нет.
 - Каждый путь вызывает один `GetAsync`. KPI — `Data/Queries/KpiCardsQuery.cs`. Рейтинг — `ManagerRankingQuery.cs`. Динамика — `ManagerDynamicsQuery.cs`. Категории — `CategoryStatQuery.cs`. Продукты — `TopProductsQuery.cs`. Последние продажи — `RecentSalesQuery.cs`: менеджер, клиент и товары входят в ту же проекцию.
 - Клиент не догружает продажи, менеджера, клиента и товары отдельным запросом на строку. Общего числа строк нет.
 
 ## Decisions
 
-Агрегаты считает сервер, браузер их не собирает из сырых продаж. Авторизации на маршрутах нет. Пункты 4–10 остаются открытыми.
+Агрегаты считает сервер, браузер их не собирает из сырых продаж. Авторизации на маршрутах нет. Сравнение по дате или по времени, часовой пояс и пункты 6–10 остаются открытыми.
 
 ## Related
 
