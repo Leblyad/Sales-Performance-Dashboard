@@ -16,6 +16,8 @@ One project, `SalesDashboard.Api`.
 SalesDashboard.Api/
   Domain/        Team, Position, Manager, Customer, Category, Product, Sale, SaleItem, SaleStatus
   Data/          AppDbContext, Configurations
+  Dto/           PageDto, SortedPageDto, результаты и параметры запросов dashboard
+  Mapping/       DashboardRegister
   Exceptions/    AppException, ExternalService, AppExceptionHandler
   Migrations/
   nlog.config    console, file, Metrics channel

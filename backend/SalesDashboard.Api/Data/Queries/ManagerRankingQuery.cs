@@ -1,5 +1,7 @@
+using Mapster;
 using Microsoft.EntityFrameworkCore;
 using SalesDashboard.Data.Views;
+using SalesDashboard.Dto;
 
 namespace SalesDashboard.Data.Queries;
 
@@ -11,19 +13,25 @@ public enum ManagerRankingMode
 
 public static class ManagerRankingQuery
 {
-    public static Task<List<ManagerRanking>> GetAsync(
+    public static async Task<SortedPageDto<ManagerRankingDto, ManagerRankingMode>> GetAsync(
         AppDbContext db,
-        ManagerRankingMode mode,
-        int skip,
-        int take)
+        ManagerRankingQueryDto query)
     {
-        IQueryable<ManagerRanking> rankings = mode switch
+        IQueryable<ManagerRanking> rankings = query.Mode switch
         {
             ManagerRankingMode.GrossProfit => db.ManagerRankings.OrderByDescending(ranking => ranking.GrossProfit),
             ManagerRankingMode.AverageCheck => db.ManagerRankings.OrderByDescending(ranking => ranking.AverageCheck),
-            _ => throw new ArgumentOutOfRangeException(nameof(mode)),
+            _ => throw new ArgumentOutOfRangeException(nameof(query.Mode)),
         };
 
-        return rankings.Skip(skip).Take(take).ToListAsync();
+        List<ManagerRanking> items = await rankings.Skip(query.Skip).Take(query.Take).ToListAsync();
+
+        return new SortedPageDto<ManagerRankingDto, ManagerRankingMode>
+        {
+            Items = items.Adapt<List<ManagerRankingDto>>(),
+            Skip = query.Skip,
+            Take = query.Take,
+            Sort = query.Mode,
+        };
     }
 }

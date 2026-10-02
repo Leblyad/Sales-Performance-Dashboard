@@ -1,14 +1,18 @@
+using Mapster;
 using Microsoft.EntityFrameworkCore;
 using SalesDashboard.Data.Models;
+using SalesDashboard.Dto;
 
 namespace SalesDashboard.Data.Queries;
 
 public static class KpiCardsQuery
 {
-    public static Task<KpiCards> GetAsync(AppDbContext db, DateTime periodFrom, DateTime periodTo)
+    public static async Task<KpiCardsDto> GetAsync(AppDbContext db, KpiCardsQueryDto query)
     {
-        return db.Database
-            .SqlQuery<KpiCards>($"SELECT * FROM kpi_cards({periodFrom}, {periodTo})")
+        KpiCards cards = await db.Database
+            .SqlQuery<KpiCards>($"SELECT * FROM kpi_cards({query.PeriodFrom}, {query.PeriodTo})")
             .SingleAsync();
+
+        return cards.Adapt<KpiCardsDto>();
     }
 }

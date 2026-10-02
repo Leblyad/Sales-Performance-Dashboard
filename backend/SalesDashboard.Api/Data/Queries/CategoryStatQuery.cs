@@ -1,6 +1,8 @@
+using Mapster;
 using Microsoft.EntityFrameworkCore;
 using SalesDashboard.Data.Models;
 using SalesDashboard.Domain;
+using SalesDashboard.Dto;
 
 namespace SalesDashboard.Data.Queries;
 
@@ -12,13 +14,9 @@ public enum CategoryStatMode
 
 public static class CategoryStatQuery
 {
-    public static Task<List<CategoryStat>> GetAsync(
+    public static async Task<SortedPageDto<CategoryStatDto, CategoryStatMode>> GetAsync(
         AppDbContext db,
-        DateTime dateFrom,
-        DateTime dateTo,
-        CategoryStatMode mode,
-        int skip,
-        int take)
+        CategoryStatQueryDto query)
     {
         IQueryable<CategoryStat> categories = db.Categories
             .Join(
@@ -29,8 +27,8 @@ public static class CategoryStatQuery
             .Join(
                 db.SaleItems.Where(item =>
                     item.Sale.Status == SaleStatus.Paid
-                    && item.Sale.Date >= dateFrom
-                    && item.Sale.Date <= dateTo),
+                    && item.Sale.Date >= query.DateFrom
+                    && item.Sale.Date <= query.DateTo),
                 row => row.product.Id,
                 item => item.ProductId,
                 (row, item) => new { row.category, item })
@@ -43,13 +41,21 @@ public static class CategoryStatQuery
                 Revenue = group.Sum(row => row.item.Price * row.item.Quantity),
             });
 
-        IQueryable<CategoryStat> ordered = mode switch
+        IQueryable<CategoryStat> ordered = query.Mode switch
         {
             CategoryStatMode.SalesCount => categories.OrderByDescending(category => category.SalesCount),
             CategoryStatMode.Revenue => categories.OrderByDescending(category => category.Revenue),
-            _ => throw new ArgumentOutOfRangeException(nameof(mode)),
+            _ => throw new ArgumentOutOfRangeException(nameof(query.Mode)),
         };
 
-        return ordered.Skip(skip).Take(take).ToListAsync();
+        List<CategoryStat> items = await ordered.Skip(query.Skip).Take(query.Take).ToListAsync();
+
+        return new SortedPageDto<CategoryStatDto, CategoryStatMode>
+        {
+            Items = items.Adapt<List<CategoryStatDto>>(),
+            Skip = query.Skip,
+            Take = query.Take,
+            Sort = query.Mode,
+        };
     }
 }

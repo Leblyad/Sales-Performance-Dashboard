@@ -1,14 +1,16 @@
+using Mapster;
 using Microsoft.EntityFrameworkCore;
 using SalesDashboard.Data.Models;
 using SalesDashboard.Domain;
+using SalesDashboard.Dto;
 
 namespace SalesDashboard.Data.Queries;
 
 public static class TopProductsQuery
 {
-    public static Task<List<TopProduct>> GetAsync(AppDbContext db)
+    public static async Task<List<TopProductDto>> GetAsync(AppDbContext db)
     {
-        return db.Products
+        List<TopProduct> products = await db.Products
             .Join(
                 db.SaleItems.Where(item => item.Sale.Status == SaleStatus.Paid),
                 product => product.Id,
@@ -24,5 +26,7 @@ public static class TopProductsQuery
             .OrderByDescending(product => product.Revenue)
             .Take(5)
             .ToListAsync();
+
+        return products.Adapt<List<TopProductDto>>();
     }
 }

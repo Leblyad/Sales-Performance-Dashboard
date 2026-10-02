@@ -1,13 +1,15 @@
+using Mapster;
 using Microsoft.EntityFrameworkCore;
 using SalesDashboard.Data.Models;
+using SalesDashboard.Dto;
 
 namespace SalesDashboard.Data.Queries;
 
 public static class RecentSalesQuery
 {
-    public static Task<List<RecentSale>> GetAsync(AppDbContext db, int skip, int take)
+    public static async Task<PageDto<RecentSaleDto>> GetAsync(AppDbContext db, RecentSalesQueryDto query)
     {
-        return db.Sales
+        List<RecentSale> sales = await db.Sales
             .OrderByDescending(sale => sale.Date)
             .Select(sale => new RecentSale
             {
@@ -35,8 +37,15 @@ public static class RecentSalesQuery
                 GrossProfit = sale.Items.Sum(item => item.Price * item.Quantity)
                     - sale.Items.Sum(item => item.Cost * item.Quantity),
             })
-            .Skip(skip)
-            .Take(take)
+            .Skip(query.Skip)
+            .Take(query.Take)
             .ToListAsync();
+
+        return new PageDto<RecentSaleDto>
+        {
+            Items = sales.Adapt<List<RecentSaleDto>>(),
+            Skip = query.Skip,
+            Take = query.Take,
+        };
     }
 }
