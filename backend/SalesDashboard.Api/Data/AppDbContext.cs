@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using SalesDashboard.Data.Views;
 using SalesDashboard.Domain;
 
 namespace SalesDashboard.Data;
@@ -20,6 +21,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<Sale> Sales => Set<Sale>();
 
     public DbSet<SaleItem> SaleItems => Set<SaleItem>();
+
+    public DbSet<ManagerRanking> ManagerRankings => Set<ManagerRanking>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
