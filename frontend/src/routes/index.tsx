@@ -38,10 +38,10 @@ function DashboardRoute() {
       <section
         key={current.id}
         id={current.id}
-        className="section-in min-h-0 flex-1 overflow-auto rounded-lg border border-line bg-card p-5"
+        className="section-in flex min-h-0 flex-1 flex-col gap-4 overflow-hidden rounded-lg border border-line bg-card p-5"
       >
-        <h2 className="text-lg font-semibold">{current.label}</h2>
-        {sectionContent[current.id]}
+        <h2 className="shrink-0 text-lg font-semibold">{current.label}</h2>
+        <div className="min-h-0 flex-1">{sectionContent[current.id]}</div>
       </section>
     </main>
   )

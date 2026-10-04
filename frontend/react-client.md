@@ -29,7 +29,7 @@ The assignment does not name a UI kit. This file is the chosen client stack. Do 
 | Routing | TanStack Router | typed routes |
 | Server state | TanStack Query | cache, retry, dedupe, invalidation |
 | Client UI state | Zustand | thin shared UI state |
-| HTTP | `fetch` / ky / openapi-fetch | thin API client |
+| HTTP | axios | thin API client |
 | Schemas | Zod | runtime validation at trust boundaries |
 | Forms | React Hook Form + Zod | forms |
 | Styles | Tailwind + shadcn/ui | UI without a second design system |
@@ -50,7 +50,7 @@ Do not add libraries for flexibility. Do not swap this stack unless the user ask
 |---------------|----------------|--------|
 | Local UI | `useState` | — |
 | Shared UI (theme, sidebar, wizard step) | Zustand (or rare Context) | put frequently changing server data in Context |
-| Server / API data | TanStack Query | copy API responses into Zustand/`useState` as source of truth |
+| Server / API data | TanStack Query | copy API responses into Zustand/`useState` as source of truth, except a KPI period already stored in the dashboard store |
 | Filters / shareable view state | Router search params | duplicate the same truth in a global store |
 
 ### Zustand rules

@@ -1,13 +1,30 @@
 import { createStore, useStore } from 'zustand'
-import type { CategoryStatMode, ManagerRankingMode } from '../entities'
+import type { CategoryStatMode, KpiCardsDto, ManagerRankingMode } from '../entities'
 
 export const pageSizes = [10, 25, 50] as const
 
 export type PageSize = (typeof pageSizes)[number]
 
+export const periodPresets = [
+  { kind: 'today', label: 'Сегодня' },
+  { kind: 'sevenDays', label: '7 дней' },
+  { kind: 'thirtyDays', label: '30 дней' },
+  { kind: 'thisMonth', label: 'Этот месяц' },
+  { kind: 'lastMonth', label: 'Прошлый месяц' },
+] as const
+
+export type PeriodPreset = (typeof periodPresets)[number]['kind']
+export type PeriodKind = PeriodPreset | 'custom'
+
+export function periodKey(periodFrom: string, periodTo: string) {
+  return `${periodFrom}|${periodTo}`
+}
+
 export interface DashboardUiState {
+  periodKind: PeriodKind
   periodFrom: string
   periodTo: string
+  kpiByPeriod: Record<string, KpiCardsDto>
   rankingMode: ManagerRankingMode
   categoryMode: CategoryStatMode
   managerId: string
@@ -17,7 +34,9 @@ export interface DashboardUiState {
   categoryTake: PageSize
   salesSkip: number
   salesTake: PageSize
-  setPeriod: (periodFrom: string, periodTo: string) => void
+  setPeriodPreset: (kind: PeriodPreset) => void
+  setCustomPeriod: (periodFrom: string, periodTo: string) => void
+  rememberKpi: (periodFrom: string, periodTo: string, cards: KpiCardsDto) => void
   setRankingMode: (rankingMode: ManagerRankingMode) => void
   setCategoryMode: (categoryMode: CategoryStatMode) => void
   setManagerId: (managerId: string) => void
@@ -33,13 +52,31 @@ function localDate(date: Date) {
   return `${year}-${month}-${day}`
 }
 
-function initialPeriod() {
-  const today = new Date()
-  const from = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 6)
-  return {
-    periodFrom: localDate(from),
-    periodTo: localDate(today),
+export function periodRange(kind: PeriodPreset, today = new Date()) {
+  const end = localDate(today)
+  if (kind === 'today') {
+    return { periodFrom: end, periodTo: end }
   }
+
+  if (kind === 'sevenDays') {
+    const start = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 6)
+    return { periodFrom: localDate(start), periodTo: end }
+  }
+
+  if (kind === 'thirtyDays') {
+    const start = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 29)
+    return { periodFrom: localDate(start), periodTo: end }
+  }
+
+  if (kind === 'thisMonth') {
+    const start = new Date(today.getFullYear(), today.getMonth(), 1)
+    const last = new Date(today.getFullYear(), today.getMonth() + 1, 0)
+    return { periodFrom: localDate(start), periodTo: localDate(last) }
+  }
+
+  const start = new Date(today.getFullYear(), today.getMonth() - 1, 1)
+  const last = new Date(today.getFullYear(), today.getMonth(), 0)
+  return { periodFrom: localDate(start), periodTo: localDate(last) }
 }
 
 function isPageSize(value: number): value is PageSize {
@@ -57,11 +94,13 @@ function pageUpdate(currentTake: PageSize, skip: number, take: number) {
   }
 }
 
-const period = initialPeriod()
+const period = periodRange('sevenDays')
 
 export const dashboardStore = createStore<DashboardUiState>()((set) => ({
+  periodKind: 'sevenDays',
   periodFrom: period.periodFrom,
   periodTo: period.periodTo,
+  kpiByPeriod: {},
   rankingMode: 0,
   categoryMode: 0,
   managerId: '',
@@ -71,7 +110,17 @@ export const dashboardStore = createStore<DashboardUiState>()((set) => ({
   categoryTake: 10,
   salesSkip: 0,
   salesTake: 10,
-  setPeriod: (periodFrom, periodTo) => set({ periodFrom, periodTo }),
+  setPeriodPreset: (kind) => set({ periodKind: kind, ...periodRange(kind) }),
+  setCustomPeriod: (periodFrom, periodTo) => set({ periodKind: 'custom', periodFrom, periodTo }),
+  rememberKpi: (periodFrom, periodTo, cards) =>
+    set((state) => {
+      const key = periodKey(periodFrom, periodTo)
+      if (state.kpiByPeriod[key]) {
+        return state
+      }
+
+      return { kpiByPeriod: { ...state.kpiByPeriod, [key]: cards } }
+    }),
   setRankingMode: (rankingMode) => set({ rankingMode }),
   setCategoryMode: (categoryMode) => set({ categoryMode }),
   setManagerId: (managerId) => set({ managerId }),

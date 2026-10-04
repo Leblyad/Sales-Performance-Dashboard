@@ -1,3 +1,5 @@
+import axios from 'axios'
+
 export function apiUrl(path: string) {
   const base = import.meta.env.VITE_API_BASE_URL ?? ''
   return `${base}${path}`
@@ -24,34 +26,46 @@ export class ApiError extends Error {
   }
 }
 
+const client = axios.create()
+
 export async function getJson<T>(path: string, query?: object): Promise<T> {
-  const search = new URLSearchParams()
+  const params: Record<string, string | number> = {}
   if (query) {
     for (const [key, value] of Object.entries(query)) {
       if (typeof value === 'string' || typeof value === 'number') {
-        search.set(key, String(value))
+        params[key] = value
       }
     }
   }
 
-  const queryText = search.toString()
-  const response = await fetch(queryText.length > 0 ? `${apiUrl(path)}?${queryText}` : apiUrl(path))
-  if (!response.ok) {
-    throw new ApiError(response.status, await readProblem(response))
-  }
+  try {
+    const response = await client.get<T>(apiUrl(path), { params })
+    return response.data
+  } catch (error) {
+    if (!axios.isAxiosError(error)) {
+      throw error
+    }
 
-  return (await response.json()) as T
+    throw new ApiError(error.response?.status ?? 0, readProblem(error.response?.data))
+  }
 }
 
-async function readProblem(response: Response): Promise<ValidationProblemDetails | null> {
-  const text = await response.text()
-  if (text.length === 0) {
-    return null
+function readProblem(data: unknown): ValidationProblemDetails | null {
+  if (typeof data === 'string') {
+    if (data.length === 0) {
+      return null
+    }
+
+    try {
+      return JSON.parse(data) as ValidationProblemDetails
+    } catch {
+      return null
+    }
   }
 
-  try {
-    return JSON.parse(text) as ValidationProblemDetails
-  } catch {
-    return null
+  if (data !== null && typeof data === 'object') {
+    return data as ValidationProblemDetails
   }
+
+  return null
 }
