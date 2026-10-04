@@ -28,6 +28,7 @@
     <None Update="nlog.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <EmbeddedResource Include="..\seed\seed.sql" LogicalName="SalesDashboard.seed.sql" />
   </ItemGroup>
 
 </Project>

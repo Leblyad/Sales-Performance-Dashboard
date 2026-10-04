@@ -11,6 +11,7 @@ COPY SalesDashboard.Api/SalesDashboard.Api.csproj SalesDashboard.Api/
 RUN dotnet restore SalesDashboard.Api/SalesDashboard.Api.csproj
 
 COPY SalesDashboard.Api/ SalesDashboard.Api/
+COPY seed/ seed/
 RUN dotnet publish SalesDashboard.Api/SalesDashboard.Api.csproj -c Release -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
