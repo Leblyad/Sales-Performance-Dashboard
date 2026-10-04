@@ -92,12 +92,18 @@ src/
   routes/index.tsx
   routeTree.gen.ts
   features/dashboard/
+    entities/
+    stores/
+    services/
+    sections/
+    navigation.ts
+    period.ts
   lib/api.ts
 ```
 
 `Dockerfile` builds the stub and nginx serves `dist` on port 80. Host mapping used for a local check is `5173:80`. That is not the reviewer URL and not `docker compose up --build`.
 
-- Keep the route thin. A block lives next to the request that feeds it, under `features/dashboard/`.
+- Keep the route thin. Under `features/dashboard/`: `entities/` for response interfaces, `stores/` for screen state, `services/` for the six GET calls, `sections/` for the screen blocks, `navigation.ts` for the tab list. `lib/api.ts` stays the shared fetch.
 - shadcn lands in `src/components/ui/` when it is added. Do not create that folder empty.
 - Do not add `React.lazy` for this single route. The router plugin already sets `autoCodeSplitting`.
 - Long lists (100+): virtualize (e.g. TanStack Virtual).

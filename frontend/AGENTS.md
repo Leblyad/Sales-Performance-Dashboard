@@ -20,4 +20,4 @@ One prompt is one decision. Finish by showing the diff with `../.cursor/skills/c
 
 ## Verification
 
-From `frontend/`: `npm run build`. Do not claim the screen is done because the stub compiled.
+From `frontend/`: `npm run build`. Then, from the repository root, `docker compose up --build -d frontend`, so http://localhost:5173 serves that build. Do not claim the screen is done because the stub compiled.
