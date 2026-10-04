@@ -18,6 +18,8 @@ public static class CategoryStatQuery
         AppDbContext db,
         CategoryStatQueryDto query)
     {
+        DateTime dateFrom = AsUtcTimestamp(query.DateFrom);
+        DateTime dateTo = AsUtcTimestamp(query.DateTo);
         IQueryable<CategoryStat> categories = db.Categories
             .Join(
                 db.Products,
@@ -27,8 +29,8 @@ public static class CategoryStatQuery
             .Join(
                 db.SaleItems.Where(item =>
                     item.Sale.Status == SaleStatus.Paid
-                    && item.Sale.Date >= query.DateFrom
-                    && item.Sale.Date <= query.DateTo),
+                    && item.Sale.Date >= dateFrom
+                    && item.Sale.Date <= dateTo),
                 row => row.product.Id,
                 item => item.ProductId,
                 (row, item) => new { row.category, item })
@@ -58,4 +60,9 @@ public static class CategoryStatQuery
             Sort = query.Mode,
         };
     }
+
+    static DateTime AsUtcTimestamp(DateTime value) =>
+        value.Kind == DateTimeKind.Local
+            ? value.ToUniversalTime()
+            : DateTime.SpecifyKind(value, DateTimeKind.Utc);
 }

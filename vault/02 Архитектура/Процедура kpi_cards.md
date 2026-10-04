@@ -20,7 +20,7 @@ KPI-карточки — одна строка за период. Формулы
 - Варианты: собрать строку запросом LINQ или функцией PostgreSQL, которую EF читает как одну строку.
 - Выбрано: функция `kpi_cards`, `RETURNS TABLE`, без CTE. Только продажи со статусом Paid. Revenue — прямая сумма `Price * Quantity`, Cost — прямая сумма `SaleItem.Cost * Quantity`. GrossProfit — Revenue − Cost, Margin — GrossProfit / Revenue, SalesCount — число продаж, AverageCheck — среднее Revenue продажи.
 - Отбор в SQL — `Status = 0`. Это значение `SaleStatus.Paid` в колонке integer. В тексте функции назван только этот отбор.
-- Вызов — `Database.SqlQuery` в `backend/SalesDashboard.Api/Data/Queries/KpiCardsQuery.cs`: `SELECT * FROM kpi_cards(period_from, period_to)`.
+- Вызов — `Database.SqlQuery` в `backend/SalesDashboard.Api/Data/Queries/KpiCardsQuery.cs`: `SELECT * FROM kpi_cards(period_from, period_to)`. Npgsql пишет `timestamptz` только из `DateTime` с `Kind=Utc`. Значение без пояса помечается как UTC, цифры часов не сдвигаются. Значение с локальным `Kind` переводится в UTC. Часовой пояс бизнеса это не выбирает.
 - Параметры `period_from` и `period_to` сравниваются с датой продажи: продажа входит, если `sale."Date" >= period_from` и `sale."Date" <= period_to`. То же условие в подзапросе AverageCheck. См. [[03 Домен/Границы периода]].
 - Пустой набор и деление на ноль не оборачиваются в COALESCE или NULLIF и не заменяются на 0.
 - Представления и DbSet для этой статистики нет. Таблицу миграция не создаёт. Индекса нет.
