@@ -1,6 +1,7 @@
 using Mapster;
 using Microsoft.EntityFrameworkCore;
 using SalesDashboard.Data.Models;
+using SalesDashboard.Domain;
 using SalesDashboard.Dto;
 
 namespace SalesDashboard.Data.Queries;
@@ -9,7 +10,13 @@ public static class RecentSalesQuery
 {
     public static async Task<PageDto<RecentSaleDto>> GetAsync(AppDbContext db, RecentSalesQueryDto query)
     {
-        List<RecentSale> sales = await db.Sales
+        IQueryable<Sale> source = db.Sales;
+        if (query.CategoryId is Guid categoryId)
+        {
+            source = source.Where(sale => sale.Items.Any(item => item.Product.CategoryId == categoryId));
+        }
+
+        List<RecentSale> sales = await source
             .OrderByDescending(sale => sale.Date)
             .Select(sale => new RecentSale
             {

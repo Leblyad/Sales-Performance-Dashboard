@@ -60,7 +60,7 @@ public sealed class DashboardController(AppDbContext db) : ControllerBase
         return TopProductsQuery.GetAsync(db);
     }
 
-    /// <summary>Страница последних продаж.</summary>
+    /// <summary>Страница последних продаж. CategoryId оставляет продажи с товаром этой категории.</summary>
     /// <response code="200">Страница продаж.</response>
     [HttpGet("sales")]
     [ProducesResponseType<PageDto<RecentSaleDto>>(StatusCodes.Status200OK)]
