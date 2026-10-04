@@ -4,7 +4,7 @@ Rules, practices, and libraries for the Sales Performance Dashboard React client
 
 **Tradeoff:** caution, clarity, and minimal changes over speed. Use the stack below. For trivial UI tweaks, use judgment.
 
-The assignment does not name a UI kit. This file is the chosen client stack. Do not pick a chart library here; none is listed.
+The assignment does not name a UI kit. This file is the chosen client stack. Charts use Recharts.
 
 ---
 
@@ -30,6 +30,7 @@ The assignment does not name a UI kit. This file is the chosen client stack. Do 
 | Server state | TanStack Query | cache, retry, dedupe, invalidation |
 | Client UI state | Zustand | thin shared UI state |
 | HTTP | axios | thin API client |
+| Charts | Recharts | axes, line, hover value |
 | Schemas | Zod | runtime validation at trust boundaries |
 | Forms | React Hook Form + Zod | forms |
 | Styles | Tailwind + shadcn/ui | UI without a second design system |
@@ -50,7 +51,7 @@ Do not add libraries for flexibility. Do not swap this stack unless the user ask
 |---------------|----------------|--------|
 | Local UI | `useState` | — |
 | Shared UI (theme, sidebar, wizard step) | Zustand (or rare Context) | put frequently changing server data in Context |
-| Server / API data | TanStack Query | copy API responses into Zustand/`useState` as source of truth, except a KPI period already stored in the dashboard store |
+| Server / API data | TanStack Query | copy API responses into Zustand/`useState` as source of truth, except a KPI period or a ranking page already stored in the dashboard store |
 | Filters / shareable view state | Router search params | duplicate the same truth in a global store |
 
 ### Zustand rules

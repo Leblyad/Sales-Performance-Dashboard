@@ -36,12 +36,14 @@ export function PeriodCalendar({
   pendingFrom,
   onPending,
   onCommit,
+  align = 'left',
 }: {
   from: string
   to: string
   pendingFrom: string | null
   onPending: (day: string) => void
   onCommit: (from: string, to: string) => void
+  align?: 'left' | 'right'
 }) {
   const opened = parseIsoDate(pendingFrom ?? from) ?? new Date()
   const [cursor, setCursor] = useState(() => new Date(opened.getFullYear(), opened.getMonth(), 1))
@@ -63,7 +65,11 @@ export function PeriodCalendar({
   }
 
   return (
-    <div className="absolute top-full left-0 z-10 mt-2 w-80 rounded-xl border border-line bg-white p-4 shadow-lg">
+    <div
+      className={`absolute top-full z-10 mt-2 w-80 rounded-xl border border-line bg-white p-4 shadow-lg ${
+        align === 'right' ? 'right-0' : 'left-0'
+      }`}
+    >
       <div className="mb-3 flex items-center justify-between">
         <button
           type="button"

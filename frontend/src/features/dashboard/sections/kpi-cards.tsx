@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useShallow } from 'zustand/react/shallow'
 import { ApiError } from '../../../lib/api'
 import { periodIssue, previousWindow } from '../period'
 import { formatAmount } from '../format-amount'
 import { fetchDashboardKpi, fetchDashboardRanking } from '../services'
-import { periodKey, periodPresets, useDashboardStore } from '../stores'
+import { periodKey, periodPresets, rankingKey, useDashboardStore } from '../stores'
 import { PeriodCalendar } from './period-calendar'
 
 function round2(value: number) {
@@ -80,7 +80,9 @@ export function KpiCards() {
     })),
   )
   const [pendingFrom, setPendingFrom] = useState<string | null>(null)
-  const choosing = periodKind === 'custom' && pendingFrom !== null
+  const [calendarOpen, setCalendarOpen] = useState(false)
+  const pickerRef = useRef<HTMLDivElement>(null)
+  const choosing = calendarOpen && pendingFrom !== null
   const issue = periodIssue(periodFrom, periodTo)
   const canLoad = issue === null && !choosing
   const previousBounds = previousWindow(periodKind, periodFrom, periodTo)
@@ -121,11 +123,22 @@ export function KpiCards() {
   const currentCards = cachedCurrent ?? kpi.data
   const previousCards = cachedPrevious ?? previous.data
 
+  const cachedBest = useDashboardStore((state) => state.rankingByQuery[rankingKey(0, 0, 1)])
+  const rememberRanking = useDashboardStore((state) => state.rememberRanking)
   const best = useQuery({
     queryKey: ['dashboard', 'ranking', 0, 0, 1],
     queryFn: () => fetchDashboardRanking({ Mode: 0, Skip: 0, Take: 1 }),
+    enabled: cachedBest === undefined,
     retry: false,
   })
+
+  useEffect(() => {
+    if (best.data) {
+      rememberRanking(0, 0, 1, best.data)
+    }
+  }, [best.data, rememberRanking])
+
+  const bestPage = cachedBest ?? best.data
 
   const metrics = [
     { title: 'Выручка', current: currentCards?.revenue ?? null, prior: previousCards?.revenue ?? null },
@@ -134,9 +147,25 @@ export function KpiCards() {
     { title: 'Количество продаж', current: currentCards?.salesCount ?? null, prior: previousCards?.salesCount ?? null },
     { title: 'Средний чек', current: currentCards?.averageCheck ?? null, prior: previousCards?.averageCheck ?? null },
   ]
-  const leader = best.data?.items?.[0]
+  const leader = bestPage?.items?.[0]
   const kpiError = canLoad && currentCards === undefined && kpi.isError ? errorText(kpi.error) : null
   const rangeMessage = choosing ? 'Выберите дату окончания' : issue
+
+  useEffect(() => {
+    if (!calendarOpen) {
+      return
+    }
+
+    function closeOnOutside(event: MouseEvent) {
+      if (!pickerRef.current?.contains(event.target as Node)) {
+        setCalendarOpen(false)
+        setPendingFrom(null)
+      }
+    }
+
+    document.addEventListener('mousedown', closeOnOutside)
+    return () => document.removeEventListener('mousedown', closeOnOutside)
+  }, [calendarOpen])
 
   return (
     <section className="flex flex-col gap-4">
@@ -149,26 +178,30 @@ export function KpiCards() {
             className={choiceClass(periodKind === preset.kind)}
             onClick={() => {
               setPendingFrom(null)
+              setCalendarOpen(false)
               setPeriodPreset(preset.kind)
             }}
           >
             {preset.label}
           </button>
         ))}
-        <div className="relative">
+        <div ref={pickerRef} className="relative">
           <button
             type="button"
             aria-pressed={periodKind === 'custom'}
-            aria-expanded={periodKind === 'custom'}
+            aria-expanded={calendarOpen}
             className={choiceClass(periodKind === 'custom')}
             onClick={() => {
               setPendingFrom(null)
-              setCustomPeriod(periodFrom, periodTo)
+              setCalendarOpen(!calendarOpen)
+              if (periodKind !== 'custom') {
+                setCustomPeriod(periodFrom, periodTo)
+              }
             }}
           >
             Произвольный
           </button>
-          {periodKind === 'custom' ? (
+          {calendarOpen ? (
             <PeriodCalendar
               from={periodFrom}
               to={periodTo}
@@ -176,6 +209,7 @@ export function KpiCards() {
               onPending={setPendingFrom}
               onCommit={(from, to) => {
                 setPendingFrom(null)
+                setCalendarOpen(false)
                 setCustomPeriod(from, to)
               }}
             />
@@ -213,14 +247,16 @@ export function KpiCards() {
         <article className="rounded-xl border border-line bg-white p-4 shadow-sm">
           <h2 className="text-sm font-medium text-ink/70">Лучший менеджер</h2>
           <div className="mt-2">
-            {best.isPending ? (
+            {bestPage === undefined && best.isFetching ? (
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-full bg-line motion-safe:animate-pulse" />
                 <div className="h-5 w-32 rounded-md bg-line motion-safe:animate-pulse" />
               </div>
             ) : null}
-            {best.isError ? <p className="text-base font-medium text-red-700">{errorText(best.error)}</p> : null}
-            {best.isSuccess && leader ? (
+            {bestPage === undefined && best.isError ? (
+              <p className="text-base font-medium text-red-700">{errorText(best.error)}</p>
+            ) : null}
+            {leader ? (
               <div className="flex items-center gap-3">
                 {leader.avatar ? (
                   <img src={leader.avatar} alt="" className="h-10 w-10 rounded-full object-cover" />

@@ -1,5 +1,5 @@
 import { createStore, useStore } from 'zustand'
-import type { CategoryStatMode, KpiCardsDto, ManagerRankingMode } from '../entities'
+import type { CategoryStatMode, KpiCardsDto, ManagerRankingMode, ManagerRankingPageDto } from '../entities'
 
 export const pageSizes = [10, 25, 50] as const
 
@@ -20,16 +20,18 @@ export function periodKey(periodFrom: string, periodTo: string) {
   return `${periodFrom}|${periodTo}`
 }
 
+export function rankingKey(mode: ManagerRankingMode, skip: number, take: number) {
+  return `${mode}|${skip}|${take}`
+}
+
 export interface DashboardUiState {
   periodKind: PeriodKind
   periodFrom: string
   periodTo: string
   kpiByPeriod: Record<string, KpiCardsDto>
-  rankingMode: ManagerRankingMode
+  rankingByQuery: Record<string, ManagerRankingPageDto>
   categoryMode: CategoryStatMode
   managerId: string
-  rankingSkip: number
-  rankingTake: PageSize
   categorySkip: number
   categoryTake: PageSize
   salesSkip: number
@@ -37,10 +39,9 @@ export interface DashboardUiState {
   setPeriodPreset: (kind: PeriodPreset) => void
   setCustomPeriod: (periodFrom: string, periodTo: string) => void
   rememberKpi: (periodFrom: string, periodTo: string, cards: KpiCardsDto) => void
-  setRankingMode: (rankingMode: ManagerRankingMode) => void
+  rememberRanking: (mode: ManagerRankingMode, skip: number, take: number, page: ManagerRankingPageDto) => void
   setCategoryMode: (categoryMode: CategoryStatMode) => void
   setManagerId: (managerId: string) => void
-  setRankingPage: (rankingSkip: number, rankingTake: number) => void
   setCategoryPage: (categorySkip: number, categoryTake: number) => void
   setSalesPage: (salesSkip: number, salesTake: number) => void
 }
@@ -101,11 +102,9 @@ export const dashboardStore = createStore<DashboardUiState>()((set) => ({
   periodFrom: period.periodFrom,
   periodTo: period.periodTo,
   kpiByPeriod: {},
-  rankingMode: 0,
+  rankingByQuery: {},
   categoryMode: 0,
   managerId: '',
-  rankingSkip: 0,
-  rankingTake: 10,
   categorySkip: 0,
   categoryTake: 10,
   salesSkip: 0,
@@ -121,14 +120,17 @@ export const dashboardStore = createStore<DashboardUiState>()((set) => ({
 
       return { kpiByPeriod: { ...state.kpiByPeriod, [key]: cards } }
     }),
-  setRankingMode: (rankingMode) => set({ rankingMode }),
+  rememberRanking: (mode, skip, take, page) =>
+    set((state) => {
+      const key = rankingKey(mode, skip, take)
+      if (state.rankingByQuery[key]) {
+        return state
+      }
+
+      return { rankingByQuery: { ...state.rankingByQuery, [key]: page } }
+    }),
   setCategoryMode: (categoryMode) => set({ categoryMode }),
   setManagerId: (managerId) => set({ managerId }),
-  setRankingPage: (rankingSkip, rankingTake) =>
-    set((state) => {
-      const next = pageUpdate(state.rankingTake, rankingSkip, rankingTake)
-      return next === null ? state : { rankingSkip: next.skip, rankingTake: next.take }
-    }),
   setCategoryPage: (categorySkip, categoryTake) =>
     set((state) => {
       const next = pageUpdate(state.categoryTake, categorySkip, categoryTake)
