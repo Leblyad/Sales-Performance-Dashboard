@@ -114,6 +114,7 @@ export interface RecentSalePageDto {
 }
 
 export interface RecentSalesQuery {
+  CategoryId?: string
   Skip?: number
   Take?: number
 }

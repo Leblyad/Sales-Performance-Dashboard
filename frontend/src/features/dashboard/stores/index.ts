@@ -1,5 +1,12 @@
 import { createStore, useStore } from 'zustand'
-import type { CategoryStatMode, KpiCardsDto, ManagerRankingMode, ManagerRankingPageDto } from '../entities'
+import type {
+  CategoryStatMode,
+  CategoryStatPageDto,
+  KpiCardsDto,
+  ManagerRankingMode,
+  ManagerRankingPageDto,
+  TopProductDto,
+} from '../entities'
 
 export const pageSizes = [10, 25, 50] as const
 
@@ -24,26 +31,33 @@ export function rankingKey(mode: ManagerRankingMode, skip: number, take: number)
   return `${mode}|${skip}|${take}`
 }
 
+export function categoryKey(periodFrom: string, periodTo: string, mode: CategoryStatMode, skip: number, take: number) {
+  return `${periodFrom}|${periodTo}|${mode}|${skip}|${take}`
+}
+
 export interface DashboardUiState {
   periodKind: PeriodKind
   periodFrom: string
   periodTo: string
   kpiByPeriod: Record<string, KpiCardsDto>
   rankingByQuery: Record<string, ManagerRankingPageDto>
-  categoryMode: CategoryStatMode
+  categoryByQuery: Record<string, CategoryStatPageDto>
+  topProducts: TopProductDto[] | null
   managerId: string
-  categorySkip: number
-  categoryTake: PageSize
-  salesSkip: number
-  salesTake: PageSize
   setPeriodPreset: (kind: PeriodPreset) => void
   setCustomPeriod: (periodFrom: string, periodTo: string) => void
   rememberKpi: (periodFrom: string, periodTo: string, cards: KpiCardsDto) => void
   rememberRanking: (mode: ManagerRankingMode, skip: number, take: number, page: ManagerRankingPageDto) => void
-  setCategoryMode: (categoryMode: CategoryStatMode) => void
+  rememberCategory: (
+    periodFrom: string,
+    periodTo: string,
+    mode: CategoryStatMode,
+    skip: number,
+    take: number,
+    page: CategoryStatPageDto,
+  ) => void
+  rememberProducts: (products: TopProductDto[]) => void
   setManagerId: (managerId: string) => void
-  setCategoryPage: (categorySkip: number, categoryTake: number) => void
-  setSalesPage: (salesSkip: number, salesTake: number) => void
 }
 
 function localDate(date: Date) {
@@ -80,35 +94,17 @@ export function periodRange(kind: PeriodPreset, today = new Date()) {
   return { periodFrom: localDate(start), periodTo: localDate(last) }
 }
 
-function isPageSize(value: number): value is PageSize {
-  return value === 10 || value === 25 || value === 50
-}
-
-function pageUpdate(currentTake: PageSize, skip: number, take: number) {
-  if (!isPageSize(take)) {
-    return null
-  }
-
-  return {
-    take,
-    skip: currentTake === take ? skip : 0,
-  }
-}
-
-const period = periodRange('sevenDays')
+const period = periodRange('thirtyDays')
 
 export const dashboardStore = createStore<DashboardUiState>()((set) => ({
-  periodKind: 'sevenDays',
+  periodKind: 'thirtyDays',
   periodFrom: period.periodFrom,
   periodTo: period.periodTo,
   kpiByPeriod: {},
   rankingByQuery: {},
-  categoryMode: 0,
+  categoryByQuery: {},
+  topProducts: null,
   managerId: '',
-  categorySkip: 0,
-  categoryTake: 10,
-  salesSkip: 0,
-  salesTake: 10,
   setPeriodPreset: (kind) => set({ periodKind: kind, ...periodRange(kind) }),
   setCustomPeriod: (periodFrom, periodTo) => set({ periodKind: 'custom', periodFrom, periodTo }),
   rememberKpi: (periodFrom, periodTo, cards) =>
@@ -129,18 +125,24 @@ export const dashboardStore = createStore<DashboardUiState>()((set) => ({
 
       return { rankingByQuery: { ...state.rankingByQuery, [key]: page } }
     }),
-  setCategoryMode: (categoryMode) => set({ categoryMode }),
+  rememberCategory: (periodFrom, periodTo, mode, skip, take, page) =>
+    set((state) => {
+      const key = categoryKey(periodFrom, periodTo, mode, skip, take)
+      if (state.categoryByQuery[key]) {
+        return state
+      }
+
+      return { categoryByQuery: { ...state.categoryByQuery, [key]: page } }
+    }),
+  rememberProducts: (products) =>
+    set((state) => {
+      if (state.topProducts !== null) {
+        return state
+      }
+
+      return { topProducts: products }
+    }),
   setManagerId: (managerId) => set({ managerId }),
-  setCategoryPage: (categorySkip, categoryTake) =>
-    set((state) => {
-      const next = pageUpdate(state.categoryTake, categorySkip, categoryTake)
-      return next === null ? state : { categorySkip: next.skip, categoryTake: next.take }
-    }),
-  setSalesPage: (salesSkip, salesTake) =>
-    set((state) => {
-      const next = pageUpdate(state.salesTake, salesSkip, salesTake)
-      return next === null ? state : { salesSkip: next.skip, salesTake: next.take }
-    }),
 }))
 
 export function useDashboardStore<T>(selector: (state: DashboardUiState) => T): T {

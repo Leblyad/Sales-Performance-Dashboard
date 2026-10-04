@@ -20,6 +20,22 @@ const segmentClass = (selected: boolean) =>
     selected ? 'bg-menu text-white' : 'bg-white text-ink hover:bg-canvas'
   }`
 
+function ChartIcon() {
+  return (
+    <svg viewBox="0 0 20 20" className="h-5 w-5" aria-hidden="true">
+      <path d="M3 15.5h14M4 13l3.5-4 3 2.5L15 6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+function ChartOffIcon() {
+  return (
+    <svg viewBox="0 0 20 20" className="h-5 w-5" aria-hidden="true">
+      <path d="M5 5l10 10M15 5L5 15" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  )
+}
+
 const modes: { mode: ManagerRankingMode; label: string }[] = [
   { mode: 0, label: 'Gross Profit' },
   { mode: 1, label: 'Average Check' },
@@ -45,8 +61,8 @@ export function Ranking() {
     setRankingSkip(skip)
   }
 
-  function showRankingChart(id: string, label: string) {
-    setSelected({ id, label })
+  function toggleRankingChart(id: string, label: string) {
+    setSelected((current) => (current?.id === id ? null : { id, label }))
   }
   const bodyRef = useRef<HTMLDivElement>(null)
   const cached = useDashboardStore((state) => state.rankingByQuery[rankingKey(rankingMode, rankingSkip, rankingTake)])
@@ -88,39 +104,9 @@ export function Ranking() {
               </button>
             ))}
           </div>
-          <div className="flex overflow-hidden rounded-md border border-line" role="group" aria-label="Размер страницы">
-            {pageSizes.map((size) => (
-              <button
-                key={size}
-                type="button"
-                aria-pressed={rankingTake === size}
-                className={segmentClass(rankingTake === size)}
-                onClick={() => setRankingPage(rankingSkip, size)}
-              >
-                {size}
-              </button>
-            ))}
-          </div>
-          <div className="ml-auto flex overflow-hidden rounded-md border border-line">
-            <button
-              type="button"
-              className="border-r border-line bg-white px-2 py-1 text-xs text-ink hover:bg-canvas disabled:opacity-40"
-              disabled={rankingSkip === 0}
-              onClick={() => setRankingPage(Math.max(0, rankingSkip - rankingTake), rankingTake)}
-            >
-              Назад
-            </button>
-            <button
-              type="button"
-              className="bg-white px-2 py-1 text-xs text-ink hover:bg-canvas disabled:opacity-40"
-              disabled={page === undefined || items.length < rankingTake}
-              onClick={() => setRankingPage(rankingSkip + rankingTake, rankingTake)}
-            >
-              Дальше
-            </button>
-          </div>
         </div>
-        <div ref={bodyRef} className="min-h-0 flex-1 overflow-auto rounded-lg border border-line bg-white">
+        <div className="flex min-h-0 flex-1 flex-col rounded-lg border border-line bg-white">
+        <div ref={bodyRef} className="min-h-0 flex-1 overflow-auto">
           {page === undefined && ranking.isFetching ? <p className="p-4">Загрузка</p> : null}
           {page === undefined && ranking.isError ? <p className="p-4 text-red-700">{errorText(ranking.error)}</p> : null}
           {page !== undefined && items.length === 0 ? (
@@ -136,6 +122,7 @@ export function Ranking() {
                   <th className="px-3 py-2 text-right font-medium">
                     {rankingMode === 0 ? 'Gross Profit' : 'Average Check'}
                   </th>
+                  <th className="whitespace-nowrap px-3 py-2 text-center font-medium">График</th>
                 </tr>
               </thead>
               <tbody>
@@ -145,18 +132,8 @@ export function Ranking() {
                   return (
                     <tr
                       key={item.managerId}
-                      tabIndex={0}
                       aria-selected={selectedRow}
-                      className={`cursor-pointer border-b border-line last:border-b-0 focus-visible:outline-2 focus-visible:outline-menu ${
-                        selectedRow ? 'bg-line' : 'hover:bg-canvas'
-                      }`}
-                      onClick={() => showRankingChart(item.managerId, label)}
-                      onKeyDown={(event) => {
-                        if (event.key === 'Enter' || event.key === ' ') {
-                          event.preventDefault()
-                          showRankingChart(item.managerId, label)
-                        }
-                      }}
+                      className={`border-b border-line last:border-b-0 ${selectedRow ? 'bg-line' : ''}`}
                     >
                       <td className="px-3 py-2">
                         <span className="flex items-center gap-3">
@@ -171,12 +148,61 @@ export function Ranking() {
                       <td className="px-3 py-2 text-right tabular-nums text-ink">
                         {formatAmount(rankingMode === 0 ? item.grossProfit : item.averageCheck)}
                       </td>
+                      <td className="px-3 py-2 text-center">
+                        <button
+                          type="button"
+                          aria-pressed={selectedRow}
+                          aria-label={selectedRow ? 'Скрыть график' : 'Показать график'}
+                          className={`rounded-md p-1.5 focus-visible:outline-2 focus-visible:outline-menu ${
+                            selectedRow ? 'bg-menu text-white' : 'text-menu hover:bg-canvas'
+                          }`}
+                          onClick={() => toggleRankingChart(item.managerId, label)}
+                        >
+                          {selectedRow ? <ChartOffIcon /> : <ChartIcon />}
+                        </button>
+                      </td>
                     </tr>
                   )
                 })}
               </tbody>
             </table>
           ) : null}
+        </div>
+        <div className="flex shrink-0 items-center justify-end gap-2 border-t border-line p-2">
+          <div className="flex overflow-hidden rounded-md border border-line" role="group" aria-label="Размер страницы">
+            {pageSizes.map((size) => (
+              <button
+                key={size}
+                type="button"
+                aria-pressed={rankingTake === size}
+                className={segmentClass(rankingTake === size)}
+                onClick={() => setRankingPage(rankingSkip, size)}
+              >
+                {size}
+              </button>
+            ))}
+          </div>
+          <div className="flex overflow-hidden rounded-md border border-line">
+            <button
+              type="button"
+              aria-label="Назад"
+              className="border-r border-line bg-white px-2 py-1 text-sm text-ink hover:bg-canvas disabled:opacity-40"
+              disabled={rankingSkip === 0}
+              onClick={() => setRankingPage(Math.max(0, rankingSkip - rankingTake), rankingTake)}
+            >
+              ‹
+            </button>
+            <button
+              type="button"
+              aria-label="Дальше"
+              className="bg-white px-2 py-1 text-sm text-ink hover:bg-canvas disabled:opacity-40"
+              disabled={page === undefined || items.length < rankingTake}
+              onClick={() => setRankingPage(rankingSkip + rankingTake, rankingTake)}
+            >
+              ›
+            </button>
+          </div>
+        </div>
         </div>
       </div>
       {selected ? (

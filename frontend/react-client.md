@@ -51,7 +51,7 @@ Do not add libraries for flexibility. Do not swap this stack unless the user ask
 |---------------|----------------|--------|
 | Local UI | `useState` | — |
 | Shared UI (theme, sidebar, wizard step) | Zustand (or rare Context) | put frequently changing server data in Context |
-| Server / API data | TanStack Query | copy API responses into Zustand/`useState` as source of truth, except a KPI period or a ranking page already stored in the dashboard store |
+| Server / API data | TanStack Query | copy API responses into Zustand/`useState` as source of truth, except a KPI period, a ranking page, a category page, or the products list already stored in the dashboard store |
 | Filters / shareable view state | Router search params | duplicate the same truth in a global store |
 
 ### Zustand rules

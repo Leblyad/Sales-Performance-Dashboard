@@ -78,9 +78,9 @@ export function RankingChart({
   label: string
   onHide: () => void
 }) {
-  const initialPeriod = periodRange('sevenDays')
+  const initialPeriod = periodRange('thirtyDays')
   const [dynamicsMetric, setDynamicsMetric] = useState<DynamicsMetric>('revenue')
-  const [chartPeriodKind, setChartPeriodKind] = useState<PeriodKind>('sevenDays')
+  const [chartPeriodKind, setChartPeriodKind] = useState<PeriodKind>('thirtyDays')
   const [chartPeriodFrom, setChartPeriodFrom] = useState(initialPeriod.periodFrom)
   const [chartPeriodTo, setChartPeriodTo] = useState(initialPeriod.periodTo)
   const [calendarOpen, setCalendarOpen] = useState(false)

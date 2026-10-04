@@ -7,18 +7,12 @@ import {
 } from '../features/dashboard/navigation'
 import { Categories } from '../features/dashboard/sections/categories'
 import { KpiCards } from '../features/dashboard/sections/kpi-cards'
-import { Products } from '../features/dashboard/sections/products'
 import { Ranking } from '../features/dashboard/sections/ranking'
-import { RecentSales } from '../features/dashboard/sections/recent-sales'
-import { Trend } from '../features/dashboard/sections/trend'
 
 const sectionContent: Record<DashboardSectionId, ReactNode> = {
   kpi: <KpiCards />,
   ranking: <Ranking />,
-  dynamics: <Trend />,
   categories: <Categories />,
-  products: <Products />,
-  sales: <RecentSales />,
 }
 
 export const Route = createFileRoute('/')({

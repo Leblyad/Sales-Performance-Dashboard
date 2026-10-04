@@ -209,7 +209,6 @@ export function KpiCards() {
               onPending={setPendingFrom}
               onCommit={(from, to) => {
                 setPendingFrom(null)
-                setCalendarOpen(false)
                 setCustomPeriod(from, to)
               }}
             />
