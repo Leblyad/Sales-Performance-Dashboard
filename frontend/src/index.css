@@ -1,8 +1,17 @@
-body {
-  margin: 0;
-  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+@import "tailwindcss";
+
+@theme {
+  --font-sans: system-ui, "Segoe UI", Roboto, sans-serif;
+  --color-canvas: #eff6ff;
+  --color-ink: #1e3a8a;
+  --color-menu: #1d4ed8;
+  --color-menu-hover: #1e40af;
+  --color-card: #ffffff;
+  --color-line: #dbeafe;
 }
 
+html,
+body,
 #root {
-  min-height: 100vh;
+  height: 100%;
 }
