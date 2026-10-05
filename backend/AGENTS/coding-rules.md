@@ -113,7 +113,7 @@ If blocked, say clearly: what was completed; what is blocking completion; what w
 
 Don't claim it works unless you checked.
 
-For this project the check is `dotnet build SalesDashboard.slnx` from `backend/`. There is no test project and no compose file; do not invent a runner for them.
+For this project the check is `dotnet build SalesDashboard.slnx` from `backend/`, and `dotnet test SalesDashboard.slnx` when query tests are in scope. There is no compose file; do not invent a runner for it.
 
 `GET /health` counts only when the app is already running. A successful build does not mean PostgreSQL is available.
 

@@ -10,7 +10,7 @@ One prompt is one decision. Finish by showing the diff with `../.cursor/skills/c
 
 ## Project
 
-One project, `SalesDashboard.Api`.
+Production code stays in one project, `SalesDashboard.Api`. Query tests are in `SalesDashboard.Api.Tests`.
 
 ```
 SalesDashboard.Api/
@@ -34,6 +34,7 @@ From `backend/`:
 
 ```bash
 dotnet build SalesDashboard.slnx
+dotnet test SalesDashboard.slnx
 ```
 
-There is no test project and no compose file. Call `GET /health` only when the process is already running. A successful build does not mean PostgreSQL is available.
+There is no compose file. Call `GET /health` only when the process is already running. A successful build does not mean PostgreSQL is available. Query tests use a separate database `sales_dashboard_query_tests` on the same host as `DefaultConnection`.
