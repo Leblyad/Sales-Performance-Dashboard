@@ -113,8 +113,23 @@ $companies = @(
 $segments = @('Малый бизнес', 'Средний бизнес', 'Корпоративный', 'Государственный')
 
 $managerWeights = @(8, 12, 6, 2, 1, 9, 7, 1, 5, 4, 14, 2, 6, 10, 1, 3, 11, 3, 7, 2)
-$monthWeights = @(6, 11, 15, 4, 3, 13, 7, 8, 12, 5, 4, 14)
-$periodStart = [datetime]'2025-10-01'
+$periodStart = [datetime]'2025-09-01'
+$periodEnd = [datetime]'2026-10-10'
+$calendarWeights = @{
+    1 = 4; 2 = 3; 3 = 13; 4 = 7; 5 = 8; 6 = 12
+    7 = 5; 8 = 4; 9 = 14; 10 = 6; 11 = 11; 12 = 15
+}
+$monthCount = 0
+$cursor = $periodStart
+while ($cursor -le $periodEnd) {
+    $monthCount++
+    $cursor = $cursor.AddMonths(1)
+}
+$monthWeights = @()
+for ($month = 0; $month -lt $monthCount; $month++) {
+    $monthStart = $periodStart.AddMonths($month)
+    $monthWeights += $calendarWeights[$monthStart.Month]
+}
 $saleCount = 3000
 $managerCount = 20
 $customerCount = 80
@@ -128,7 +143,7 @@ for ($managerIndex = 0; $managerIndex -lt $managerCount; $managerIndex++) {
     elseif ($weight -le 7) { $skipCount = 1 }
 
     $pool = New-Object System.Collections.Generic.List[int]
-    for ($month = 0; $month -lt 12; $month++) { [void]$pool.Add($month) }
+    for ($month = 0; $month -lt $monthCount; $month++) { [void]$pool.Add($month) }
     for ($skip = 0; $skip -lt $skipCount; $skip++) {
         $pick = $rng.Next(0, $pool.Count)
         $month = $pool[$pick]
@@ -139,7 +154,7 @@ for ($managerIndex = 0; $managerIndex -lt $managerCount; $managerIndex++) {
 
 $slots = New-Object System.Collections.Generic.List[object]
 for ($managerIndex = 0; $managerIndex -lt $managerCount; $managerIndex++) {
-    for ($month = 0; $month -lt 12; $month++) {
+    for ($month = 0; $month -lt $monthCount; $month++) {
         if ($emptyMonths.Contains("$managerIndex-$month")) { continue }
         $copies = $managerWeights[$managerIndex] * $monthWeights[$month]
         for ($copy = 0; $copy -lt $copies; $copy++) {
@@ -150,11 +165,14 @@ for ($managerIndex = 0; $managerIndex -lt $managerCount; $managerIndex++) {
 
 function New-SaleDate([int]$managerIndex, [int]$month, $fixedDay) {
     $monthStart = $periodStart.AddMonths($month)
+    $daysInMonth = [datetime]::DaysInMonth($monthStart.Year, $monthStart.Month)
+    $monthLast = Get-Date -Year $monthStart.Year -Month $monthStart.Month -Day $daysInMonth
+    if ($monthLast.Date -gt $periodEnd.Date) { $daysInMonth = $periodEnd.Day }
     if ($null -ne $fixedDay) {
         $day = $fixedDay
     }
     else {
-        $dayNumber = $rng.Next(1, [datetime]::DaysInMonth($monthStart.Year, $monthStart.Month) + 1)
+        $dayNumber = $rng.Next(1, $daysInMonth + 1)
         $day = Get-Date -Year $monthStart.Year -Month $monthStart.Month -Day $dayNumber -Hour 0 -Minute 0 -Second 0
     }
 
@@ -182,7 +200,7 @@ for ($index = 0; $index -lt $managerCount; $index++) {
     $isActive = $index -lt 16
     $activeSql = 'false'
     if ($isActive) { $activeSql = 'true' }
-    $avatar = 'https://cdn.example.com/avatars/manager-{0:d2}.png' -f ($index + 1)
+    $avatar = 'https://api.dicebear.com/9.x/lorelei/svg?seed={0}' -f $id
     $managerRows.Add(("    ('{0}', '{1}', '{2}', '{3}', {4}, '{5}')" -f $id, $managerNames[$index], $teamId, $positionId, $activeSql, $avatar))
 }
 
@@ -200,8 +218,8 @@ $itemRows = New-Object System.Collections.Generic.List[string]
 $statusCounts = @(0, 0, 0)
 $itemNumber = 1
 $occupied = @{}
-$firstDay = [datetime]'2025-10-01'
-$lastDay = [datetime]'2026-09-30'
+$firstDay = $periodStart
+$lastDay = $periodEnd
 
 for ($saleIndex = 0; $saleIndex -lt $saleCount; $saleIndex++) {
     $fixedDay = $null
@@ -213,8 +231,8 @@ for ($saleIndex = 0; $saleIndex -lt $saleCount; $saleIndex++) {
     }
     elseif ($saleIndex -eq ($saleCount - 1)) {
         $managerIndex = 1
-        while ($emptyMonths.Contains("$managerIndex-11")) { $managerIndex++ }
-        $month = 11
+        while ($emptyMonths.Contains("$managerIndex-$($monthCount - 1)")) { $managerIndex++ }
+        $month = $monthCount - 1
         $fixedDay = $lastDay
     }
     else {
@@ -276,7 +294,7 @@ for ($saleIndex = 0; $saleIndex -lt $saleCount; $saleIndex++) {
 
 $missingEmpty = $true
 for ($managerIndex = 0; $managerIndex -lt $managerCount; $managerIndex++) {
-    for ($month = 0; $month -lt 12; $month++) {
+    for ($month = 0; $month -lt $monthCount; $month++) {
         $monthStart = $periodStart.AddMonths($month)
         $key = '{0}-{1:yyyy-MM}' -f $managerIndex, $monthStart
         if (-not $occupied.ContainsKey($key)) { $missingEmpty = $false }
@@ -294,8 +312,8 @@ if ($saleRows.Count -ne 3000 -or $managerRows.Count -ne 20 -or $customerRows.Cou
 $hasFirstDay = $false
 $hasLastDay = $false
 foreach ($row in $saleRows) {
-    if ($row.Contains('2025-10-01 ')) { $hasFirstDay = $true }
-    if ($row.Contains('2026-09-30 ')) { $hasLastDay = $true }
+    if ($row.Contains("$($periodStart.ToString('yyyy-MM-dd')) ")) { $hasFirstDay = $true }
+    if ($row.Contains("$($periodEnd.ToString('yyyy-MM-dd')) ")) { $hasLastDay = $true }
 }
 if (-not $hasFirstDay -or -not $hasLastDay) { throw 'period bounds are missing a sale' }
 
