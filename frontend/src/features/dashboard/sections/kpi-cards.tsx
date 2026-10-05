@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useShallow } from 'zustand/react/shallow'
-import { ApiError } from '../../../lib/api'
 import { periodIssue, previousWindow } from '../period'
 import { formatAmount } from '../format-amount'
 import { fetchDashboardKpi, fetchDashboardRanking } from '../services'
 import { periodKey, periodPresets, rankingKey, useDashboardStore } from '../stores'
 import { PeriodCalendar } from './period-calendar'
+import { useErrorToast } from './states'
 
 function round2(value: number) {
   return Math.round(value * 100) / 100
@@ -34,14 +34,6 @@ function periodDelta(current: number | null, previous: number | null) {
   }
 
   return { text, className: 'text-neutral-500' }
-}
-
-function errorText(error: unknown) {
-  if (error instanceof ApiError) {
-    return `Ошибка загрузки (${error.status})`
-  }
-
-  return 'Ошибка загрузки'
 }
 
 const choiceClass = (selected: boolean) =>
@@ -148,7 +140,8 @@ export function KpiCards() {
     { title: 'Средний чек', current: currentCards?.averageCheck ?? null, prior: previousCards?.averageCheck ?? null },
   ]
   const leader = bestPage?.items?.[0]
-  const kpiError = canLoad && currentCards === undefined && kpi.isError ? errorText(kpi.error) : null
+  useErrorToast(canLoad && currentCards === undefined && kpi.isError, kpi.error)
+  useErrorToast(bestPage === undefined && best.isError, best.error)
   const rangeMessage = choosing ? 'Выберите дату окончания' : issue
 
   useEffect(() => {
@@ -235,7 +228,7 @@ export function KpiCards() {
               <div className="mt-2">
                 <MetricValue
                   loading={canLoad && currentCards === undefined && kpi.isPending}
-                  error={kpiError}
+                  error={null}
                   value={canLoad && currentCards ? formatAmount(metric.current) : null}
                 />
               </div>
@@ -251,9 +244,6 @@ export function KpiCards() {
                 <div className="h-10 w-10 rounded-full bg-line motion-safe:animate-pulse" />
                 <div className="h-5 w-32 rounded-md bg-line motion-safe:animate-pulse" />
               </div>
-            ) : null}
-            {bestPage === undefined && best.isError ? (
-              <p className="text-base font-medium text-red-700">{errorText(best.error)}</p>
             ) : null}
             {leader ? (
               <div className="flex items-center gap-3">

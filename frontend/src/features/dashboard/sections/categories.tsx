@@ -1,6 +1,5 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { ApiError } from '../../../lib/api'
 import type { CategoryStatMode } from '../entities'
 import { formatAmount } from '../format-amount'
 import { periodIssue } from '../period'
@@ -17,14 +16,7 @@ import {
 } from '../stores'
 import { CategorySales } from './category-sales'
 import { PeriodCalendar } from './period-calendar'
-
-function errorText(error: unknown) {
-  if (error instanceof ApiError) {
-    return `Ошибка загрузки (${error.status})`
-  }
-
-  return 'Ошибка загрузки'
-}
+import { BlockLoader, Collapse, SidePanel, useErrorToast } from './states'
 
 const segmentClass = (selected: boolean) =>
   `border-r border-line px-2 py-1 text-xs last:border-r-0 focus-visible:outline-2 focus-visible:outline-menu ${
@@ -40,7 +32,7 @@ function Chevron({ open }: { open: boolean }) {
   return (
     <svg
       viewBox="0 0 20 20"
-      className={`h-4 w-4 text-ink ${open ? 'rotate-180' : ''}`}
+      className={`h-4 w-4 text-ink transition-transform duration-150 motion-reduce:transition-none ${open ? 'rotate-180' : ''}`}
       aria-hidden="true"
     >
       <path d="M5 7.5 10 12.5 15 7.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
@@ -138,6 +130,8 @@ export function Categories() {
   const page = canLoad ? (cached ?? categories.data) : undefined
   const items = page?.items ?? []
   const productItems = cachedProducts ?? products.data
+  useErrorToast(canLoad && page === undefined && categories.isError, categories.error)
+  useErrorToast(productItems == null && products.isError, products.error)
   const rangeMessage = choosing ? 'Выберите дату окончания' : issue
   const rangeLabel = periodKind === 'today' ? periodFrom : `${periodFrom} — ${periodTo}`
 
@@ -233,10 +227,7 @@ export function Categories() {
         )}
         <div className="flex min-h-0 flex-1 flex-col rounded-lg border border-line bg-white">
         <div ref={bodyRef} className="min-h-0 flex-1 overflow-auto">
-          {canLoad && page === undefined && categories.isFetching ? <p className="p-4">Загрузка</p> : null}
-          {canLoad && page === undefined && categories.isError ? (
-            <p className="p-4 text-red-700">{errorText(categories.error)}</p>
-          ) : null}
+          {canLoad && page === undefined && categories.isFetching ? <BlockLoader /> : null}
           {canLoad && page !== undefined && items.length === 0 ? (
             <p className="p-4">{categorySkip === 0 ? 'Нет продаж за период' : 'На этой странице нет категорий'}</p>
           ) : null}
@@ -281,11 +272,8 @@ export function Categories() {
                         <td className="w-px whitespace-nowrap py-2 pl-8 pr-3 text-left tabular-nums text-ink">{item.salesCount}</td>
                         <td className="px-3 py-2 text-right tabular-nums text-ink">{formatAmount(item.revenue)}</td>
                       </tr>
-                      {open ? (
-                        <tr className="border-b border-line bg-white">
-                          <td colSpan={4} className="bg-white px-3 py-3">
-                            {productItems == null && products.isFetching ? <p>Загрузка</p> : null}
-                            {productItems == null && products.isError ? <p className="text-red-700">{errorText(products.error)}</p> : null}
+                      <Collapse open={open} colSpan={4}>
+                            {productItems == null && products.isFetching ? <BlockLoader rows={3} /> : null}
                             {productItems != null && productItems.length === 0 ? <p>Нет продуктов</p> : null}
                             {productItems != null && productItems.length > 0 ? (
                               <table className="w-full border-collapse bg-white text-left text-sm">
@@ -316,9 +304,7 @@ export function Categories() {
                                 Подробнее
                               </button>
                             </div>
-                          </td>
-                        </tr>
-                      ) : null}
+                      </Collapse>
                     </Fragment>
                   )
                 })}
@@ -363,9 +349,11 @@ export function Categories() {
         </div>
         </div>
       </div>
-      {selected ? (
-        <CategorySales categoryId={selected.id} label={selected.label} onHide={() => setSelected(null)} />
-      ) : null}
+      <SidePanel open={selected !== null}>
+        {selected ? (
+          <CategorySales categoryId={selected.id} label={selected.label} onHide={() => setSelected(null)} />
+        ) : null}
+      </SidePanel>
     </section>
   )
 }

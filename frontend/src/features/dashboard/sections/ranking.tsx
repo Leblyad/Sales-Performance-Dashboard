@@ -1,19 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { ApiError } from '../../../lib/api'
 import type { ManagerRankingMode } from '../entities'
 import { formatAmount } from '../format-amount'
 import { fetchDashboardRanking } from '../services'
 import { pageSizes, rankingKey, useDashboardStore, type PageSize } from '../stores'
 import { RankingChart } from './ranking-chart'
-
-function errorText(error: unknown) {
-  if (error instanceof ApiError) {
-    return `Ошибка загрузки (${error.status})`
-  }
-
-  return 'Ошибка загрузки'
-}
+import { BlockLoader, SidePanel, useErrorToast } from './states'
 
 const segmentClass = (selected: boolean) =>
   `border-r border-line px-2 py-1 text-xs last:border-r-0 focus-visible:outline-2 focus-visible:outline-menu ${
@@ -82,6 +74,7 @@ export function Ranking() {
 
   const page = cached ?? ranking.data
   const items = page?.items ?? []
+  useErrorToast(page === undefined && ranking.isError, ranking.error)
 
   useEffect(() => {
     bodyRef.current?.scrollTo({ top: 0 })
@@ -107,8 +100,7 @@ export function Ranking() {
         </div>
         <div className="flex min-h-0 flex-1 flex-col rounded-lg border border-line bg-white">
         <div ref={bodyRef} className="min-h-0 flex-1 overflow-auto">
-          {page === undefined && ranking.isFetching ? <p className="p-4">Загрузка</p> : null}
-          {page === undefined && ranking.isError ? <p className="p-4 text-red-700">{errorText(ranking.error)}</p> : null}
+          {page === undefined && ranking.isFetching ? <BlockLoader /> : null}
           {page !== undefined && items.length === 0 ? (
             <p className="p-4">{rankingSkip === 0 ? 'Нет менеджеров' : 'На этой странице нет менеджеров'}</p>
           ) : null}
@@ -205,9 +197,9 @@ export function Ranking() {
         </div>
         </div>
       </div>
-      {selected ? (
-        <RankingChart managerId={selected.id} label={selected.label} onHide={() => setSelected(null)} />
-      ) : null}
+      <SidePanel open={selected !== null}>
+        {selected ? <RankingChart managerId={selected.id} label={selected.label} onHide={() => setSelected(null)} /> : null}
+      </SidePanel>
     </section>
   )
 }

@@ -10,7 +10,6 @@ import {
   YAxis,
   type TooltipContentProps,
 } from 'recharts'
-import { ApiError } from '../../../lib/api'
 import { formatAmount } from '../format-amount'
 import { periodIssue } from '../period'
 import { fetchDashboardDynamics } from '../services'
@@ -24,14 +23,7 @@ const dynamicsMetrics: { metric: DynamicsMetric; label: string }[] = [
   { metric: 'salesCount', label: 'Количество продаж' },
 ]
 import { PeriodCalendar } from './period-calendar'
-
-function errorText(error: unknown) {
-  if (error instanceof ApiError) {
-    return `Ошибка загрузки (${error.status})`
-  }
-
-  return 'Ошибка загрузки'
-}
+import { BlockLoader, useErrorToast } from './states'
 
 function axisDate(value: string) {
   return `${value.slice(8, 10)}.${value.slice(5, 7)}`
@@ -115,6 +107,7 @@ export function RankingChart({
     enabled: canLoad,
     retry: false,
   })
+  useErrorToast(canLoad && dynamics.isError, dynamics.error)
   const points = (dynamics.data ?? []).map((row) => ({
     date: row.date.slice(0, 10),
     value: seriesValue(dynamicsMetric, row),
@@ -140,7 +133,7 @@ export function RankingChart({
   }, [calendarOpen])
 
   return (
-    <aside className="flex h-full min-h-0 min-w-0 flex-[1.7] flex-col gap-2 rounded-xl border border-line bg-white p-3">
+    <aside className="flex h-full min-h-0 min-w-0 flex-1 flex-col gap-2 rounded-xl border border-line bg-white p-3">
       <div className="flex shrink-0 items-center justify-between gap-3">
         <h3 className="text-base font-semibold">{label}</h3>
         <button
@@ -224,8 +217,7 @@ export function RankingChart({
         )}
       </div>
       <div className="min-h-0 flex-1">
-        {canLoad && dynamics.isPending ? <p>Загрузка</p> : null}
-        {canLoad && dynamics.isError ? <p className="text-red-700">{errorText(dynamics.error)}</p> : null}
+        {canLoad && dynamics.isPending ? <BlockLoader rows={6} /> : null}
         {canLoad && dynamics.isSuccess && points.length === 0 ? <p>Нет продаж за период</p> : null}
         {canLoad && dynamics.isSuccess && points.length > 0 ? (
           <ResponsiveContainer width="100%" height="100%">

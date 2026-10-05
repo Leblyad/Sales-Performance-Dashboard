@@ -1,23 +1,15 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { ApiError } from '../../../lib/api'
 import type { SaleStatus } from '../entities'
 import { formatAmount } from '../format-amount'
 import { fetchDashboardSales } from '../services'
 import { pageSizes, type PageSize } from '../stores'
+import { BlockLoader, useErrorToast } from './states'
 
 const statusLabel: Record<SaleStatus, string> = {
   0: 'Paid',
   1: 'Cancelled',
   2: 'Refunded',
-}
-
-function errorText(error: unknown) {
-  if (error instanceof ApiError) {
-    return `Ошибка загрузки (${error.status})`
-  }
-
-  return 'Ошибка загрузки'
 }
 
 function saleDate(value: string) {
@@ -68,9 +60,10 @@ export function CategorySales({
   })
   const page = sales.data
   const items = page?.items ?? []
+  useErrorToast(sales.isError, sales.error)
 
   return (
-    <aside className="flex h-full min-h-0 min-w-0 flex-[1.7] flex-col gap-2 rounded-xl border border-line bg-white p-3">
+    <aside className="flex h-full min-h-0 min-w-0 flex-1 flex-col gap-2 rounded-xl border border-line bg-white p-3">
       <div className="flex shrink-0 items-center justify-between gap-3">
         <h3 className="text-base font-semibold">{label}</h3>
         <button
@@ -83,8 +76,7 @@ export function CategorySales({
       </div>
       <div className="flex min-h-0 flex-1 flex-col rounded-lg border border-line">
       <div className="min-h-0 flex-1 overflow-auto">
-        {sales.isPending ? <p className="p-4">Загрузка</p> : null}
-        {sales.isError ? <p className="p-4 text-red-700">{errorText(sales.error)}</p> : null}
+        {sales.isPending ? <BlockLoader /> : null}
         {sales.isSuccess && items.length === 0 ? (
           <p className="p-4">{salesSkip === 0 ? 'Нет продаж' : 'На этой странице нет продаж'}</p>
         ) : null}

@@ -41,7 +41,7 @@ The assignment does not name a UI kit. This file is the chosen client stack. Cha
 
 Do not add libraries for flexibility. Do not swap this stack unless the user asks and the vault decision is updated.
 
-`frontend/package.json` exists. The screen is still a stub. Do not add a test runner until tests are requested. Verify with `npm run build` from `frontend/`.
+`frontend/package.json` exists. `npm test` runs Vitest. Do not add a second test runner. Verify a screen change with `npm run build` from `frontend/`.
 
 ---
 
